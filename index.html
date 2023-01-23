@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" type="text/css" href="styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  </head>
+  <body>
+    <button id="connect-button" class="btn btn-primary" type="submit">Connect Metamask</button>
+    <button id="send-button" class="btn btn-success" type="submit">Send</button>
+    <script>
+      let account;
+      let balance;
+
+      document.getElementById('connect-button').addEventListener('click', event => { 
+        let button = event.target;
+        ethereum.request({method: 'eth_requestAccounts'}).then(accounts => {
+          account = accounts[0];
+          console.log(account);
+          button.textContent = account;
+
+          ethereum.request({method: 'eth_getBalance' , params: [account, 'latest']}).then(result => {
+            console.log(result);
+            let wei = parseInt(result,16);
+            balance = wei / (10**18);
+            console.log(balance + " ETH");
+          });
+        });
+      });
+
+      // var weiValue = string(web3.utils.toWei('1', 'ether')); // 1 ether
+      // console.log(weiValue);//1000000000000000000
+
+      //if(window.ethereum.networkVersion == 10) {
+        document.getElementById('send-button').addEventListener('click', event =>{
+          let transactionParam = {
+            to: '0xBb978B70A936Cd017E3B73D53B8A7fc36367f5a5',
+            from: account,
+            value: '0x38D7EA4C68000',
+            //value: "weiValue"
+          };
+          
+          ethereum.request({method: 'eth_sendTransaction', params:[transactionParam]}).then(txhash => {
+            console.log(txhash);
+            checkTransactionconfirmation(txhash).then(r => alert(r));
+          });
+        });
+      //}
+      function checkTransactionconfirmation(txhash) {
+
+        let checkTransactionLoop = () => {
+          return ethereum.request({method:'eth_getTransactionReceipt',params:[txhash]}).then(r => {
+            if(r !=null) return 'confirmed';
+            else return checkTransactionLoop();
+          });
+        };
+
+        return checkTransactionLoop();
+      }
+
+
+    </script>  
+  </body>
+</html>
